@@ -7,7 +7,6 @@
 # - ...
 # - ...
 
-from collections import Counter, defaultdict
 from semantic_network import *
 from constraintsearch import *
 
@@ -50,10 +49,10 @@ class MySN(SemanticNetwork):
     def query(self,entity,assoc=None):
         # IMPLEMENT HERE
         pds = [
-        self.query(entity2, assoc)
-        for u, v in self.declarations.items()
-        for (entity1, relation), entity2 in v.items()
-        if relation in ['subtype', 'member'] and entity1 == entity
+            self.query(entity2, assoc)
+            for u, v in self.declarations.items()
+            for (entity1, relation), entity2 in v.items()
+            if relation in ['subtype', 'member', 'association'] and entity1 == entity
         ]
 
         pds_query = [d for sublist in pds for d in sublist]
@@ -78,6 +77,7 @@ class MySN(SemanticNetwork):
 
 
         N = len(q)
+        K = 0
         for d in q:
             for d2 in qmember:
                 if d.relation.entity1 == d2.relation.entity1:
@@ -86,17 +86,18 @@ class MySN(SemanticNetwork):
                         for s in self.predecessor_path(user, d2.relation.entity2):
                             if s not in stats_assoc_e1:
                                 stats_assoc_e1.append(s)
-            
+                
                 if d.relation.entity2 == d2.relation.entity1:
                     if d2.relation.entity2 not in stats_assoc_e2:
                         stats_assoc_e2.append(d2.relation.entity2)
                         for s in self.predecessor_path(user, d2.relation.entity2):
                             if s not in stats_assoc_e2:
                                 stats_assoc_e2.append(s)
-                                
 
+                if len(self.query_local(user=d2.user, e1=d.relation.entity1)) == 0:
+                    K += 1
+                                
         k1 = {}
-        K1 = 0
         for x in stats_assoc_e1:
             count = 0
             for decl in q:
@@ -109,12 +110,8 @@ class MySN(SemanticNetwork):
                     k1[p] = 0
                 k1[p] = k1[p] + count
             
-            print(self.query_local(user=user, e1=x, rel='subtype'))
-            if len(self.query_local(user=user, e1=x, rel='subtype')) or len(self.query_local(user=user, e1=x, rel='member'))== 0:
-                K1 += 1
 
-        print(K1)
-        k1 = {k: v / (N-K1+K1**2)  for k, v in k1.items()}
+        k1 = {k: v / (N-K+K**2)  for k, v in k1.items()}
             
 
         k2 = {}
@@ -130,7 +127,7 @@ class MySN(SemanticNetwork):
                     k2[p] = 0
                 k2[p] = k2[p] + count
         
-        k2 = {k: v / N for k, v in k2.items()}
+        k2 = {k: v / (N-K+K**2) for k, v in k2.items()}
 
         self.assoc_stats[(assoc, user)] = (k1, k2)
     

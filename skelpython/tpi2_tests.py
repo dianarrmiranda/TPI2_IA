@@ -36,9 +36,13 @@ z.query_local(e1='Socrates')
 z.show_query_result()
 print()
 
+print('likes:',z.query_local(rel='likes'),'\n')
 
-print('Socrates:',z.query('Socrates','likes'),'\n')
+print('Socrates-likes:',z.query('Socrates','likes'),'\n')
 
+print('Socrates:',z.query('Socrates'),'\n')
+
+print('Socrates-subtype:',z.query('Socrates','subtype'),'\n')
 
 z.update_assoc_stats('teacher','Descartes')
 print(z.assoc_stats,'\n')
@@ -68,6 +72,9 @@ print(z.assoc_stats,'\n')
 
 z.insert(Declaration('Darwin',AssocOne('Mary','hasMother','Elvira')))
 z.insert(Declaration('Darwin',AssocOne('Elvira','hasMother','Eva')))
+
+print('hasMother:',z.query_local(rel='hasMother'))
+
 z.update_assoc_stats('hasMother','Darwin')
 print(z.assoc_stats['hasMother','Darwin'],'\n')
 z.update_assoc_stats('hasMother')
@@ -150,4 +157,3 @@ solutions = cs.search_all()
 for s in solutions:
     print({v:s[v] for v in variables})
 print(len(solutions))
-
