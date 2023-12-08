@@ -68,14 +68,12 @@ class MySN(SemanticNetwork):
         stats_assoc_e1 = []
         stats_assoc_e2 = []
 
-
         q = self.query_local(user=user, rel=assoc)
+
+        q = [d for d in q if isObjectName(d.relation.entity1) or isObjectName(d.relation.entity2)]
 
         qmember = self.query_local(user=user, rel='member')
 
-
-        N = len(q)
-        K = 0
         for d in q:
             for d2 in qmember:
                 if d.relation.entity1 == d2.relation.entity1:
@@ -92,10 +90,11 @@ class MySN(SemanticNetwork):
                             if s not in stats_assoc_e2:
                                 stats_assoc_e2.append(s)
 
-            if len(self.query_local(user=user, e1=d.relation.entity2)) == 0:
-                K += 1
+        N = len(q)
+        K1 = sum(len(self.query_local(user=user, e1=d.relation.entity1)) == 0 for d in q)
+        K2 = sum(len(self.query_local(user=user, e1=d.relation.entity2)) == 0 for d in q)
 
-        k1 = {}
+        freq1 = {}
         for x in stats_assoc_e1:
             count = 0
             for decl in q:
@@ -104,15 +103,14 @@ class MySN(SemanticNetwork):
                         count += 1
 
             for p in self.predecessor_path(user, x):
-                if p not in k1:
-                    k1[p] = 0
-                k1[p] = k1[p] + count
+                if p not in freq1:
+                    freq1[p] = 0
+                freq1[p] = freq1[p] + count
             
 
-        k1 = {k: v / (N-K+K**0.5) for k, v in k1.items()}
-            
-
-        k2 = {}
+        freq1 = {k: v / (N-K1+K1**0.5) for k, v in freq1.items()}
+        
+        freq2 = {}
         for x in stats_assoc_e2:
             count = 0
             for decl in q:
@@ -121,13 +119,13 @@ class MySN(SemanticNetwork):
                         count += 1
 
             for p in self.predecessor_path(user, x):
-                if p not in k2:
-                    k2[p] = 0
-                k2[p] = k2[p] + count
+                if p not in freq2:
+                    freq2[p] = 0
+                freq2[p] = freq2[p] + count
         
-        k2 = {k: v / (N-K+K**0.5) for k, v in k2.items()}
+        freq2 = {k: v / (N-K2+K2**0.5) for k, v in freq2.items()}
 
-        self.assoc_stats[(assoc, user)] = (k1, k2)
+        self.assoc_stats[(assoc, user)] = (freq1, freq2)
     
     def predecessor_path(self,user, c):
             decl = self.query_local(user=user, e1=c, rel='subtype')
