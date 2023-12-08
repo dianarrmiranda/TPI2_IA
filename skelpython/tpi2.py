@@ -48,22 +48,20 @@ class MySN(SemanticNetwork):
 
     def query(self,entity,assoc=None):
         # IMPLEMENT HERE
-        pds = [
-            self.query(entity2, assoc)
-            for u, v in self.declarations.items()
-            for (entity1, relation), entity2 in v.items()
-            if relation in ['subtype', 'member', 'association'] and entity1 == entity
-        ]
-
+        dec = self.query_local(e1=entity, rel=None) 
+        
+        pds = [self.query(d.relation.entity2, assoc) for d in dec if (d.relation.name == 'subtype' or d.relation.name == 'member') and d.relation.entity1==entity]
+            
         pds_query = [d for sublist in pds for d in sublist]
         q = self.query_local(e1=entity, rel=assoc)
-        
         lista = []
         for d in q:
-            if d.relation.name == assoc:
+            if d.relation.name != 'member' and d.relation.name != 'subtype':
                 lista.append(d)
-
+        
         return pds_query + lista
+
+
 
     def update_assoc_stats(self,assoc,user=None):
 
@@ -94,10 +92,9 @@ class MySN(SemanticNetwork):
                             if s not in stats_assoc_e2:
                                 stats_assoc_e2.append(s)
 
-
-            if len(self.query_local(user=user, e1=d.relation.entity1)) == 0:
+            if len(self.query_local(user=user, e1=d.relation.entity2)) == 0:
                 K += 1
-              
+
         k1 = {}
         for x in stats_assoc_e1:
             count = 0
