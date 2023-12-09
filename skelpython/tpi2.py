@@ -4,8 +4,7 @@
 # YOUR NUMBER: 107457
 
 # COLLEAGUES WITH WHOM YOU DISCUSSED THIS ASSIGNMENT (names, numbers):
-# - ...
-# - ...
+# - Rúben Garrido, 107927
 
 from semantic_network import *
 from constraintsearch import *
